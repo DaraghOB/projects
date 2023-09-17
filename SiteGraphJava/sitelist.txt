@@ -1,0 +1,8 @@
+Limgrave,5,7,South Limgrave,4,Caelid,6,Liurnia,6
+South Limgrave,6,4,Limgrave,4
+Caelid,12,6,Limgrave,6
+Liurnia,7,12,Limgrave,6,Altus Plateau,5
+Altus Plateau,8,15,Liurnia,5,Volcano Manor,6,Giants Mountaintop,7
+Volcano Manor,2,14,Altus Plateau,6
+Giants Mountaintop,10,18,Altus Plateau,7,Haligtree,8
+Haligtree,9,21,Giants Mountaintop,8

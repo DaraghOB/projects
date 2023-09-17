@@ -1,0 +1,134 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.*;
+
+public class loginScreen extends JFrame {
+
+    private Connection conn;
+
+    public loginScreen() {
+        setTitle("Login");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+        getContentPane().setBackground(new Color(55, 55, 170));
+
+        // create and add message label to top of window
+        JLabel message = new JLabel("Please enter your login credentials", SwingConstants.CENTER);
+        message.setFont(new Font("Arial", Font.BOLD, 16));
+        message.setForeground(Color.YELLOW);
+        add(message, BorderLayout.NORTH);
+
+        // create panel for input fields and buttons
+        JPanel inputPanel = new JPanel(new GridLayout(3, 2, 10, 10));
+        inputPanel.setBackground(new Color(55, 55, 170));
+        inputPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // add labels and text fields for username and password input
+        JLabel userLabel = new JLabel("Username:", SwingConstants.RIGHT);
+        userLabel.setForeground(Color.YELLOW);
+        JTextField userField = new JTextField();
+        userField.setColumns(20);
+        JLabel passLabel = new JLabel("Password:", SwingConstants.RIGHT);
+        passLabel.setForeground(Color.YELLOW);
+        JPasswordField passField = new JPasswordField();
+        passField.setColumns(20);
+
+        // add input fields and buttons to input panel
+        inputPanel.add(userLabel);
+        inputPanel.add(userField);
+        inputPanel.add(passLabel);
+        inputPanel.add(passField);
+
+        // create and add login and cancel buttons to input panel
+        JButton loginButton = new JButton("Login");
+        JButton exitButton = new JButton("Exit");
+        inputPanel.add(loginButton);
+        inputPanel.add(exitButton);
+        exitButton.setBackground(new Color(255, 0, 0));
+        exitButton.setForeground(Color.WHITE);
+        loginButton.setBackground(new Color(0, 255, 0));
+        loginButton.setForeground(Color.WHITE);
+
+        add(inputPanel, BorderLayout.CENTER);
+
+        // pack and display the window
+        pack();
+        setVisible(true);
+
+        // set up database connection
+        String url = "jdbc:mysql://localhost:3306/purchases";
+        String user = "root";
+        String password = "C00171575";
+        try {
+            conn = DriverManager.getConnection(url, user, password);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error connecting to database", "Error", JOptionPane.ERROR_MESSAGE);
+            System.exit(1);
+        }
+
+        // add ActionListener to login button
+        loginButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String username = userField.getText();
+                String password = new String(passField.getPassword());
+                try {
+                    PreparedStatement ps = conn.prepareStatement("SELECT * FROM loginInfo WHERE username=? AND password=?");
+                    ps.setString(1, username);
+                    ps.setString(2, password);
+                    ResultSet rs = ps.executeQuery();
+                    if (rs.next()) {
+                        JOptionPane.showMessageDialog(loginScreen.this, "Login successful!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                        // open the main menu
+                        new mainMenu();
+                        dispose(); // close the login screen
+                    } else {
+                        JOptionPane.showMessageDialog(loginScreen.this, "Invalid username or password", "Error", JOptionPane.ERROR_MESSAGE);
+                        userField.setText(""); // clear the username field
+                        passField.setText(""); // clear the password field
+                    }
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(loginScreen.this, "Error checking login", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+        
+        exitButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int confirmation = JOptionPane.showConfirmDialog(loginScreen.this, "Are you sure you want to exit?", "Confirm Exit", JOptionPane.YES_NO_OPTION);
+                if (confirmation == JOptionPane.YES_OPTION) {
+                    try {
+                        if (conn != null) {
+                            conn.close(); // close the database connection if it is still open
+                        }
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+                    } finally {
+                        dispose(); // close the login screen
+                        System.exit(0); // terminate the program safely
+                    }
+                }
+            }
+        });
+
+        setSize(new Dimension(600, 300));
+        }
+        
+        public void setButtonSize(JButton button, int width, int height) {
+            Dimension size = new Dimension(width, height);
+            button.setPreferredSize(size);
+            button.setMinimumSize(size);
+            button.setMaximumSize(size);
+        }
+
+
+
+public static void main(String[] args) {
+    new loginScreen();
+}
+}

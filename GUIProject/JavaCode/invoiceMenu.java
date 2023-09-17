@@ -1,0 +1,743 @@
+import javax.swing.*;
+import java.awt.*;
+import java . sql .Connection;
+import java . sql .DriverManager;
+import java . sql .PreparedStatement;
+import java . sql .SQLException;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.ResultSet;
+import javax.swing.JTextField;
+
+
+public class invoiceMenu extends JFrame {
+
+    private Connection conn;
+    private int invID = -1;
+    
+    public invoiceMenu() {
+        setTitle("Invoice Menu");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+        getContentPane().setBackground(new Color(55, 55, 150));
+
+        // create and add message label to top of window
+        JLabel message = new JLabel("Invoice Menu", SwingConstants.CENTER);
+        message.setFont(new Font("Arial", Font.BOLD, 24));
+        message.setForeground(Color.YELLOW);
+        add(message, BorderLayout.NORTH);
+
+        // create buttons for each row
+        JPanel buttonPanel = new JPanel(new GridLayout(2, 2, 10, 10));
+        buttonPanel.setBackground(new Color(255, 255, 255));
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        JButton createInvButton = new JButton("Create Invoice");
+        setButtonSize(createInvButton, 150, 50);
+        createInvButton.setBackground(new Color(55, 55, 170));
+        createInvButton.setForeground(Color.YELLOW);
+        buttonPanel.add(createInvButton);
+
+        
+        // Action Listener for Create Invoice
+createInvButton.addActionListener(new ActionListener() {
+    public void actionPerformed(ActionEvent e) {
+        // create new JFrame for creating a new invoice
+        JFrame createInvFrame = new JFrame("Create Invoice");
+        createInvFrame.setLayout(new GridLayout(7, 2));
+        createInvFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        createInvFrame.getContentPane().setBackground(new Color(55, 55, 170));
+
+        // create labels and text fields for input
+        JLabel custIDLabel = new JLabel("Customer ID:");
+        custIDLabel.setForeground(Color.YELLOW);
+        JTextField custIDField = new JTextField();
+
+        JLabel prodIDLabel = new JLabel("Product ID:");
+        prodIDLabel.setForeground(Color.YELLOW);
+        JTextField prodIDField = new JTextField();
+
+        JLabel prodNameLabel = new JLabel("Product Name:");
+        prodNameLabel.setForeground(Color.YELLOW);
+        JTextField prodNameField = new JTextField();
+
+        JLabel prodCostLabel = new JLabel("Product Cost:");
+        prodCostLabel.setForeground(Color.YELLOW);
+        JTextField prodCostField = new JTextField();
+
+        JLabel prodAmountLabel = new JLabel("Amount of Product:");
+        prodAmountLabel.setForeground(Color.YELLOW);
+        JTextField prodAmountField = new JTextField();
+
+        JLabel invTotalLabel = new JLabel("Invoice Total:");
+        invTotalLabel.setForeground(Color.YELLOW);
+        JTextField invTotalField = new JTextField();
+        invTotalField.setEditable(false); // make the field non-editable
+
+        // add labels and text fields to JFrame
+        createInvFrame.add(custIDLabel);
+        createInvFrame.add(custIDField);
+        createInvFrame.add(prodIDLabel);
+        createInvFrame.add(prodIDField);
+        createInvFrame.add(prodNameLabel);
+        createInvFrame.add(prodNameField);
+        createInvFrame.add(prodCostLabel);
+        createInvFrame.add(prodCostField);
+        createInvFrame.add(prodAmountLabel);
+        createInvFrame.add(prodAmountField);
+        createInvFrame.add(invTotalLabel);
+        createInvFrame.add(invTotalField);
+
+        // create "Create" and "Cancel" buttons
+JButton createButton = new JButton("Create");
+JButton cancelButton = new JButton("Cancel");
+createButton.setBackground(new Color(0, 255, 0));
+createButton.setForeground(Color.WHITE);
+cancelButton.setBackground(new Color(255, 0, 0));
+cancelButton.setForeground(Color.WHITE);
+
+// add action listener to create button
+createButton.addActionListener(new ActionListener() {
+    public void actionPerformed(ActionEvent e) {
+        int custID = Integer.parseInt(custIDField.getText());
+        int prodID = Integer.parseInt(prodIDField.getText());
+        String prodName = prodNameField.getText();
+        String prodCost = prodCostField.getText();
+        String prodAmount = prodAmountField.getText();
+        double total = Double.parseDouble(prodCost) * Double.parseDouble(prodAmount);
+        invTotalField.setText(String.format("%.2f", total)); // populate the invoice total field
+        createInvoice(custID, prodID, prodName, prodCost, prodAmount);
+        createInvFrame.dispose(); // close create invoice window
+    }
+});
+
+// add action listener to cancel button
+cancelButton.addActionListener(new ActionListener() {
+    public void actionPerformed(ActionEvent e) {
+        createInvFrame.dispose(); // close create invoice window
+    }
+});
+
+// add buttons to JFrame
+createInvFrame.add(createButton);
+createInvFrame.add(cancelButton);
+
+// set size and visibility of JFrame
+createInvFrame.pack();
+createInvFrame.setSize(400, 300);
+createInvFrame.setVisible(true);
+createInvFrame.getContentPane().setBackground(new Color(55, 55, 170));
+    }
+});
+
+
+        JButton retrieveInvButton = new JButton("Retrieve Invoice");
+        setButtonSize(retrieveInvButton, 150, 50);
+        retrieveInvButton.setBackground(new Color(55, 55, 170));
+        retrieveInvButton.setForeground(Color.YELLOW);
+        buttonPanel.add(retrieveInvButton);
+
+        retrieveInvButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                retrieveInvoice();
+            }
+        });
+
+        JButton updateInvButton = new JButton("Update Invoice");
+        setButtonSize(updateInvButton, 150, 50);
+        updateInvButton.setBackground(new Color(55, 55, 170));
+        updateInvButton.setForeground(Color.YELLOW);
+        buttonPanel.add(updateInvButton);
+
+        //action listener for Update Invoice
+        updateInvButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                updateInvoice();
+            }
+        });
+
+        JButton deleteInvButton = new JButton("Delete Invoice");
+        setButtonSize(deleteInvButton, 150, 50);
+        deleteInvButton.setBackground(new Color(55, 55, 170));
+        deleteInvButton.setForeground(Color.YELLOW);
+        buttonPanel.add(deleteInvButton);
+
+        //action listener for Delete Invoice
+        deleteInvButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                // prompt the user for the invoice ID to delete
+                String invoiceIdStr = JOptionPane.showInputDialog("Enter invoice ID to delete:");
+                if (invoiceIdStr != null) {
+                    try {
+                        int invoiceId = Integer.parseInt(invoiceIdStr);
+                        deleteInvoice(invoiceId);
+                    } catch (NumberFormatException ex) {
+                        JOptionPane.showMessageDialog(null, "Invalid invoice ID. Please enter a number.", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            }
+        });
+
+        add(buttonPanel, BorderLayout.CENTER);
+
+        // add Main Menu button at bottom right corner
+        JButton mainMenuButton = new JButton("Main Menu");
+        mainMenuButton.setBackground(new Color(0, 128, 0));
+        mainMenuButton.setForeground(Color.WHITE);
+        setButtonSize(mainMenuButton, 100, 50);
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        bottomPanel.setBackground(new Color(55, 55, 150));
+        bottomPanel.add(mainMenuButton);
+
+        
+
+        // add ActionListener to Main Menu button
+        mainMenuButton.addActionListener(new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            dispose(); // close the current window
+            new mainMenu(); // open a new instance of the main menu
+            }
+        });
+
+        add(bottomPanel, BorderLayout.SOUTH);
+
+        // set the size of the window
+        setSize(new Dimension(600, 300));
+
+        // pack and display the window
+        setVisible(true);
+    }
+
+    
+    /** 
+     * @param button
+     * @param width
+     * @param height
+     */
+    public void setButtonSize(JButton button, int width, int height) {
+        Dimension size = new Dimension(width, height);
+        button.setPreferredSize(size);
+        button.setMinimumSize(size);
+        button.setMaximumSize(size);
+    }
+
+    
+    /** 
+     * @param args
+     */
+    public static void main(String[] args) {
+        new invoiceMenu();
+    }
+
+
+    /**
+
+    Creates a new invoice in the database with the specified customer ID, product ID, product name, product cost, and product amount.
+    Validates the customer ID, product ID, product name, and product cost before creating the invoice.
+    If validation fails after 3 attempts, displays an error message and returns without creating the invoice.
+    Calculates the invoice total and inserts a new invoice record into the invoice table in the database.
+    Updates the product table by subtracting the product amount from the product stock.
+    param custID The customer ID for the invoice
+    param prodID The product ID for the invoice
+    param prodName The product name for the invoice
+    param prodCost The product cost for the invoice
+    param prodAmount The product amount for the invoice
+    */
+
+    public void createInvoice(int custID, int prodID, String prodName, String prodCost, String prodAmount) {
+        PreparedStatement stmt = null;
+        try {
+            // create a new database connection
+            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost/purchases", "root", "C00171575");
+
+            int custAttempts = 3;
+            int prodAttempts = 3;
+            boolean validCustID = false;
+            boolean validProdID = false;
+            boolean validProdName = false;
+    
+            while (custAttempts > 0 && !validCustID) {
+                // validate customer ID
+                PreparedStatement validateCustStmt = conn.prepareStatement("SELECT * FROM customer WHERE custID = ?");
+                validateCustStmt.setInt(1, custID);
+                ResultSet custRs = validateCustStmt.executeQuery();
+                if (!custRs.next()) {
+                    JOptionPane.showMessageDialog(null, "Invalid customer ID. " + custAttempts + " attempts remaining.", "Error", JOptionPane.ERROR_MESSAGE);
+                    custID = Integer.parseInt(JOptionPane.showInputDialog(null, "Please enter a valid customer ID:", "Customer ID", JOptionPane.QUESTION_MESSAGE));
+                    custAttempts--;
+                } else {
+                    validCustID = true;
+                }
+            }
+    
+            while (prodAttempts > 0 && (!validProdID || !validProdName)) {
+                // validate product ID, name and price
+                PreparedStatement validateProdStmt = conn.prepareStatement("SELECT * FROM product WHERE prodID = ?");
+                validateProdStmt.setInt(1, prodID);
+                ResultSet prodRs = validateProdStmt.executeQuery();
+                if (!prodRs.next()) {
+                    JOptionPane.showMessageDialog(null, "Invalid product ID. " + prodAttempts + " attempts remaining.", "Error", JOptionPane.ERROR_MESSAGE);
+                    prodID = Integer.parseInt(JOptionPane.showInputDialog(null, "Please enter a valid product ID:", "Product ID", JOptionPane.QUESTION_MESSAGE));
+                    prodAttempts--;
+                } else {
+                    validProdID = true;
+                    if (!prodName.equals(prodRs.getString("prodName"))) {
+                        JOptionPane.showMessageDialog(null, "Invalid product name for product ID chosen.", "Error", JOptionPane.ERROR_MESSAGE);
+                        prodName = JOptionPane.showInputDialog(null, "Please enter a valid product name:", "Product Name", JOptionPane.QUESTION_MESSAGE);
+                    } else {
+                        double prodPrice = Double.parseDouble(prodCost);
+                        double dbProdPrice = Double.parseDouble(prodRs.getString("prodCost"));
+                        if (prodPrice != dbProdPrice) {
+                            JOptionPane.showMessageDialog(null, "Invalid product cost for product chosen.", "Error", JOptionPane.ERROR_MESSAGE);
+                            prodCost = JOptionPane.showInputDialog(null, "Please enter a valid product cost:", "Product Cost", JOptionPane.QUESTION_MESSAGE);
+                        } else {
+                            validProdName = true;
+                        }
+                    }
+                }
+            }
+
+            if (!validCustID || !validProdID || !validProdName) {
+                JOptionPane.showMessageDialog(null, "Too many attempts. Could not create invoice.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+    
+            // calculate invoice total
+            double invoiceTotal = Double.parseDouble(prodCost) * Double.parseDouble(prodAmount);
+    
+            // prepare a statement to insert a new invoice into the invoice table
+            stmt = conn.prepareStatement("INSERT INTO invoice (custID, prodID, prodName, prodCost, prodAmount, invoiceTotal) VALUES (?, ?, ?, ?, ?, ?)");
+            stmt.setInt(1, custID);
+            stmt.setInt(2, prodID);
+            stmt.setString(3, prodName);
+            stmt.setString(4, prodCost);
+            stmt.setString(5, prodAmount);
+            stmt.setDouble(6, invoiceTotal);
+    
+            // execute the statement to insert the new invoice
+            int rowsInserted = stmt.executeUpdate();
+            if (rowsInserted > 0) {
+                // display a success message to the user
+                String message = "New invoice created:\n";
+                message += "Customer ID: " + custID + "\n";
+                message += "Product ID: " + prodID + "\n";
+                message += "Product Name: " + prodName + "\n";
+                message += "Product Cost: " + prodCost + "\n";
+                message += "Product Amount: " + prodAmount + "\n";
+                message += "Invoice Total: " + invoiceTotal + "\n";
+                JOptionPane.showMessageDialog(null, message, "Success", JOptionPane.INFORMATION_MESSAGE);
+    
+                // update the product table by subtracting the prodAmount from prodStock
+                PreparedStatement updateStmt = conn.prepareStatement("UPDATE product SET prodStock = prodStock - ? WHERE prodID = ?");
+                updateStmt.setString(1, prodAmount);
+                updateStmt.setInt(2, prodID);
+                updateStmt.executeUpdate();
+              
+            } else {
+                JOptionPane.showMessageDialog(null, "Failed to create a new invoice.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "An error occurred while creating a new invoice: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        } finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(null, "An error occurred while closing the database connection: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    /**
+
+    Deletes an invoice with the given invoice ID from the invoice table in the database.
+
+    If an invoice with the given ID is found, the invoice details are displayed to the user
+
+    for confirmation before the invoice is deleted. After the invoice is deleted, the
+
+    corresponding product stock is updated by adding back the product amount.
+
+    param invoiceId the ID of the invoice to be deleted
+    */
+
+    public void deleteInvoice(int invoiceId) {
+        ResultSet rs = null;
+    
+        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost/purchases", "root", "C00171575");
+             PreparedStatement stmt = conn.prepareStatement("SELECT custID, prodID, prodName, prodCost, prodAmount, invoiceTotal FROM invoice WHERE invoiceID = ?");
+             PreparedStatement deleteStmt = conn.prepareStatement("DELETE FROM invoice WHERE invoiceID = ?")) {
+    
+            // prepare a statement to retrieve the invoice details from the invoice table
+            stmt.setInt(1, invoiceId);
+    
+            // execute the statement to retrieve the invoice details
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                // display the invoice details to the user
+                String message = "Are you sure you want to delete this invoice?\n\n";
+                message += "Customer ID: " + rs.getInt("custID") + "\n";
+                message += "Product ID: " + rs.getInt("prodID") + "\n";
+                message += "Product Name: " + rs.getString("prodName") + "\n";
+                message += "Product Cost: " + rs.getString("prodCost") + "\n";
+                message += "Product Amount: " + rs.getString("prodAmount") + "\n";
+                message += "Invoice Total: " + rs.getDouble("invoiceTotal") + "\n";
+                int choice = JOptionPane.showOptionDialog(null, message, "Confirm Delete", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, new Object[] {"Yes", "No"}, "No");
+                if (choice == JOptionPane.YES_OPTION) {
+                    // prepare a statement to delete the invoice from the invoice table
+                    deleteStmt.setInt(1, invoiceId);
+    
+                    // execute the statement to delete the invoice
+                    int rowsDeleted = deleteStmt.executeUpdate();
+                    if (rowsDeleted > 0) {
+                        JOptionPane.showMessageDialog(null, "The invoice has been deleted.", "Success", JOptionPane.INFORMATION_MESSAGE);
+    
+                        // update the product table by adding back the prodAmount to prodStock
+                        PreparedStatement updateStmt = conn.prepareStatement("UPDATE product SET prodStock = prodStock + ? WHERE prodID = ?");
+                        updateStmt.setString(1, rs.getString("prodAmount"));
+                        updateStmt.setInt(2, rs.getInt("prodID"));
+                        updateStmt.executeUpdate();
+                    } else {
+                        JOptionPane.showMessageDialog(null, "No invoice with that ID was found.", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            } else {
+                JOptionPane.showMessageDialog(null, "No invoice with that ID was found.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "An error occurred while deleting the invoice: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(null, "An error occurred while closing the result set: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    /**
+
+    Retrieves the details of an invoice from the database and displays them in a form.
+
+    Prompts the user to enter an invoice ID, then retrieves the corresponding invoice details
+
+    from the "invoice" table in the "purchases" database. Displays the invoice details in a
+
+    form with fields for customer ID, product ID, product name, product cost, amount of product,
+
+    and invoice total. The form also includes a "Close" button to dismiss the form. If no invoice
+
+    is found with the specified ID, displays an error message.
+    */
+
+    public void retrieveInvoice() {
+        try {
+            // create a new database connection
+            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost/purchases", "root", "C00171575");
+    
+            // ask the user to enter an invoice ID
+            int invoiceId = Integer.parseInt(JOptionPane.showInputDialog("Enter invoice ID:"));
+    
+            // prepare a statement to retrieve the invoice details from the invoice table
+            PreparedStatement stmt = conn.prepareStatement("SELECT * FROM invoice WHERE invoiceID = ?");
+            stmt.setInt(1, invoiceId);
+    
+            // execute the query and retrieve the results
+            ResultSet rs = stmt.executeQuery();
+    
+            // create a form to display the invoice details
+            JPanel form = new JPanel(new GridLayout(7, 2, 10, 10));
+            final JTextField custIDField;
+            final JTextField prodIDField;
+            final JTextField prodNameField;
+            final JTextField prodCostField;
+            final JTextField prodAmountField;
+            final JTextField invTotalField;
+    
+            if (rs.next()) { // move the cursor to the first row
+                custIDField = new JTextField(rs.getString("custID"));
+                custIDField.setEditable(false);
+                prodIDField = new JTextField(rs.getString("prodID"));
+                prodIDField.setEditable(false);
+                prodNameField = new JTextField(rs.getString("prodName"));
+                prodNameField.setEditable(false);
+                prodCostField = new JTextField(rs.getString("prodCost"));
+                prodCostField.setEditable(false);
+                prodAmountField = new JTextField(rs.getString("prodAmount"));
+                prodAmountField.setEditable(false);
+                invTotalField = new JTextField(rs.getString("invoiceTotal"));
+                invTotalField.setEditable(false);
+    
+                JLabel custIDLabel = new JLabel("Customer ID:\n");
+                JLabel prodIDLabel = new JLabel("Product ID:\n");
+                JLabel prodNameLabel = new JLabel("Product Name:\n");
+                JLabel prodCostLabel = new JLabel("Product Cost:\n");
+                JLabel prodAmountLabel = new JLabel("Amount of Product:\n");
+                JLabel invTotalLabel = new JLabel("Invoice Total:\n");
+    
+                // set foreground and background colors
+                custIDLabel.setForeground(Color.YELLOW);
+                prodIDLabel.setForeground(Color.YELLOW);
+                prodNameLabel.setForeground(Color.YELLOW);
+                prodCostLabel.setForeground(Color.YELLOW);
+                prodAmountLabel.setForeground(Color.YELLOW);
+                invTotalLabel.setForeground(Color.YELLOW);
+                form.setBackground(new Color(55, 55, 170));
+                custIDField.setBackground(Color.WHITE);
+                prodIDField.setBackground(Color.WHITE);
+                prodNameField.setBackground(Color.WHITE);
+                prodCostField.setBackground(Color.WHITE);
+                prodAmountField.setBackground(Color.WHITE);
+                invTotalField.setBackground(Color.WHITE);
+    
+                form.add(custIDLabel);
+                form.add(custIDField);
+                form.add(prodIDLabel);
+                form.add(prodIDField);
+                form.add(prodNameLabel);
+                form.add(prodNameField);
+                form.add(prodCostLabel);
+                form.add(prodCostField);
+                form.add(prodAmountLabel);
+                form.add(prodAmountField);
+                form.add(invTotalLabel);
+                form.add(invTotalField);
+            } else {
+                // no rows returned
+                JOptionPane.showMessageDialog(null, "No invoice found with ID " + invoiceId, "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+    
+            // create a button to close the form
+            JButton closeButton = new JButton("Close");
+            closeButton.setBackground(new Color(0, 255, 0));
+            closeButton.setForeground(Color.WHITE);
+    
+            closeButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    // close the form
+                    JDialog retrieveInvoiceFrame = (JDialog) SwingUtilities.getWindowAncestor(form);
+                    retrieveInvoiceFrame.dispose();
+                }
+            });
+            // add button panel to the form
+            form.add(closeButton);
+    
+            // display the form in a dialog box
+            JDialog retrieveProdFrame = new JDialog();
+            retrieveProdFrame.setTitle("Invoice Details");
+            retrieveProdFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            retrieveProdFrame.add(form);
+            retrieveProdFrame.pack();
+            retrieveProdFrame.setSize(600, 300);
+            retrieveProdFrame.setVisible(true);
+    
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+
+    Updates an invoice with the specified invoice ID in the invoice table in the purchases database.
+    Displays the current invoice details in a form, and allows the user to edit the customer ID, product ID, product amount, and invoice total.
+    Prompts the user with a confirmation dialog before updating the invoice record.
+    throws SQLException if a database access error occurs
+    */
+
+
+    public void updateInvoice() {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        JDialog updateInvFrame = new JDialog();
+    
+        try {
+            // create a new database connection
+            conn = DriverManager.getConnection("jdbc:mysql://localhost/purchases", "root", "C00171575");
+    
+            // ask the user to enter an invoice ID
+            invID = Integer.parseInt(JOptionPane.showInputDialog("Enter invoice ID:"));
+    
+            // prepare a statement to retrieve the invoice details from the invoice table
+            stmt = conn.prepareStatement("SELECT custID, prodID, prodName, prodCost, prodAmount, invoiceTotal FROM invoice WHERE invoiceID = ?");
+            stmt.setInt(1, invID);
+    
+            // execute the query and retrieve the results
+            rs = stmt.executeQuery();
+    
+            // create a form to display the invoice details
+            JPanel form = new JPanel(new GridLayout(7, 2, 10, 10));
+            final JTextField custIDField;
+            final JTextField prodIDField;
+            final JTextField prodNameField;
+            final JTextField prodCostField;
+            final JTextField prodAmountField;
+            final JTextField invTotalField;
+            if (rs.next()) { // move the cursor to the first row
+                custIDField = new JTextField(rs.getString("custID"));
+                custIDField.setEditable(false);
+                prodIDField = new JTextField(rs.getString("prodID"));
+                prodIDField.setEditable(false);
+                prodNameField = new JTextField(rs.getString("prodName"));
+                prodNameField.setEditable(false);
+                prodCostField = new JTextField(String.valueOf(rs.getDouble("prodCost")));
+                prodCostField.setEditable(false);
+                prodAmountField = new JTextField(String.valueOf(rs.getInt("prodAmount")));
+                prodAmountField.setEditable(false);
+                invTotalField = new JTextField(String.valueOf(rs.getDouble("invoiceTotal")));
+                invTotalField.setEditable(false);
+    
+                JLabel custIDLabel = new JLabel("Customer ID:");
+                JLabel prodIDLabel = new JLabel("Product ID:");
+                JLabel prodNameLabel = new JLabel("Product Name:");
+                JLabel prodCostLabel = new JLabel("Product Cost:");
+                JLabel prodAmountLabel = new JLabel("Amount of Product:");
+                JLabel invTotalLabel = new JLabel("Invoice Total:");
+    
+                // set foreground and background colors
+                custIDLabel.setForeground(Color.YELLOW);
+                prodIDLabel.setForeground(Color.YELLOW);
+                prodNameLabel.setForeground(Color.YELLOW);
+                prodCostLabel.setForeground(Color.YELLOW);
+                prodAmountLabel.setForeground(Color.YELLOW);
+                invTotalLabel.setForeground(Color.YELLOW);
+                form.setBackground(new Color(55, 55, 170));
+                custIDField.setBackground(Color.WHITE);
+                prodIDField.setBackground(Color.WHITE);
+                prodNameField.setBackground(Color.WHITE);
+                prodCostField.setBackground(Color.WHITE);
+                prodAmountField.setBackground(Color.WHITE);
+                invTotalField.setBackground(Color.WHITE);
+    
+                form.add(custIDLabel);
+                form.add(custIDField);
+                form.add(prodIDLabel);
+                form.add(prodIDField);
+                form.add(prodNameLabel);
+                form.add(prodNameField);
+                form.add(prodCostLabel);
+                form.add(prodCostField);
+                form.add(prodAmountLabel);
+                form.add(prodAmountField);
+                form.add(invTotalLabel);
+                form.add(invTotalField);
+            } else {
+                // no rows returned
+                JOptionPane.showMessageDialog(null, "No invoice found with ID " + invID, "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+    
+            JButton editButton = new JButton("Edit");
+            editButton.setBackground(new Color(0, 255, 0));
+            editButton.setForeground(Color.WHITE);
+
+            editButton.addActionListener(new ActionListener() {
+                private boolean isEditable = false;
+            
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    isEditable = !isEditable; // toggle the value of isEditable
+            
+                    // set the editability of the text fields based on the value of isEditable
+                    custIDField.setEditable(isEditable);
+                    prodIDField.setEditable(isEditable);
+                    prodNameField.setEditable(isEditable);
+                    prodCostField.setEditable(isEditable);
+                    prodAmountField.setEditable(isEditable);
+                    invTotalField.setEditable(isEditable);
+            
+                    // change the text on the edit button based on the value of isEditable
+                    editButton.setText(isEditable ? "Lock" : "Edit");
+                }
+            });
+            
+            JButton confirmButton = new JButton("Confirm");
+            confirmButton.setBackground(new Color(255, 0, 0));
+            confirmButton.setForeground(Color.WHITE);
+            confirmButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    // Prompt the user with a confirmation dialog before updating the record
+                    int confirmResult = JOptionPane.showConfirmDialog(null, "Are you sure you want to update the record?", "Confirm Update", JOptionPane.YES_NO_OPTION);
+                    if (confirmResult == JOptionPane.YES_OPTION) {
+                        try {
+                            // prepare a statement to update the invoice details in the invoice table
+                            PreparedStatement updateStmt = conn.prepareStatement("UPDATE invoice SET custID = ?, prodID = ?, prodAmount = ?, invoiceTotal = ? WHERE invID = ?");
+            
+                            // get the updated values from the text fields
+                            String custID = custIDField.getText();
+                            String prodID = prodIDField.getText();
+                            String prodAmount = prodAmountField.getText();
+                            String invTotal = invTotalField.getText();
+            
+                            // set the parameters in the update statement
+                            updateStmt.setString(1, custID);
+                            updateStmt.setString(2, prodID);
+                            updateStmt.setString(3, prodAmount);
+                            updateStmt.setString(4, invTotal);
+                            updateStmt.setInt(5, invID); // use the invID entered by the user earlier
+            
+                            // execute the update statement
+                            int rowsUpdated = updateStmt.executeUpdate();
+            
+                            // show a message indicating the number of rows updated
+                            JOptionPane.showMessageDialog(null, rowsUpdated + " rows updated", "Success", JOptionPane.INFORMATION_MESSAGE);
+            
+                            // close the dialog box
+                            updateInvFrame.dispose();
+            
+                        } catch (SQLException ex) {
+                            ex.printStackTrace();
+                        }
+            
+                    }
+                }
+            });
+            
+            JButton backButton = new JButton("Back");
+            backButton.setBackground(new Color(255, 165, 0));
+            backButton.setForeground(Color.WHITE);
+            backButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    updateInvFrame.dispose(); // close the dialog box
+                }
+            });
+            
+            // add buttons to a panel
+            JPanel buttonPanel = new JPanel(new GridLayout(1, 3, 10, 10));
+            buttonPanel.setBackground(new Color(55, 55, 170));
+            buttonPanel.add(backButton);
+            buttonPanel.add(editButton);
+            buttonPanel.add(confirmButton);
+            
+            // add button panel to the form
+            form.add(buttonPanel);
+            
+            // display the form in a dialog box
+            updateInvFrame.setTitle("Update Invoice");
+            updateInvFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            updateInvFrame.add(form);
+            updateInvFrame.pack();
+            updateInvFrame.setSize(600, 400);
+            updateInvFrame.setVisible(true);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            }
+
+
+
+}
+        
+        
+
+        
+    
+        

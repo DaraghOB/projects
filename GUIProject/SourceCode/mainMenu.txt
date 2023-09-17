@@ -1,0 +1,141 @@
+import java.awt.*;
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class mainMenu extends JFrame {
+
+    public mainMenu() {
+        setTitle("Bespoke Furniture");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+        getContentPane().setBackground(new Color(55, 55, 150));
+
+        // create and add message label to top of window
+        JLabel message = new JLabel("Bespoke Furniture", SwingConstants.CENTER);
+        message.setFont(new Font("Arial", Font.BOLD, 24));
+        message.setForeground(Color.YELLOW);
+        add(message, BorderLayout.NORTH);
+
+        
+        // create buttons for each row
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 3, 10, 10));
+        buttonPanel.setBackground(new Color(255, 255, 255));
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        
+        // create panel for customer button
+        JPanel customerPanel = new JPanel(new BorderLayout());
+        customerPanel.setBackground(new Color(255, 255, 255));
+        JLabel customerLabel = new JLabel("Customer Actions", SwingConstants.CENTER);
+        customerLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        customerPanel.add(customerLabel, BorderLayout.NORTH);
+        JButton customerButton = new JButton("Customer");
+        setButtonSize(customerButton, 150, 50);
+        customerButton.setBackground(new Color(55, 55, 170));
+        customerButton.setForeground(Color.YELLOW);
+        customerPanel.add(customerButton, BorderLayout.CENTER);
+        buttonPanel.add(customerPanel);
+
+        // add ActionListener to customer button
+        customerButton.addActionListener(new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+        dispose(); // close the current mainMenu window
+        new customerMenu(); // open the customerMenu window
+            }
+    });
+    
+        // create panel for product button
+        JPanel productPanel = new JPanel(new BorderLayout());
+        productPanel.setBackground(new Color(255, 255, 255));
+        JLabel productLabel = new JLabel("Product Actions", SwingConstants.CENTER);
+        productLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        productPanel.add(productLabel, BorderLayout.NORTH);
+        JButton productButton = new JButton("Product");
+        setButtonSize(productButton, 150, 50);
+        productButton.setBackground(new Color(55, 55, 170));
+        productButton.setForeground(Color.YELLOW);
+        productPanel.add(productButton, BorderLayout.CENTER);
+        buttonPanel.add(productPanel);
+
+        // add ActionListener to product button
+        productButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+            new productMenu(); // open the customerMenu window
+                }
+        });
+    
+        // create panel for invoice button
+        JPanel invoicePanel = new JPanel(new BorderLayout());
+        invoicePanel.setBackground(new Color(255, 255, 255));
+        JLabel invoiceLabel = new JLabel("Invoice Actions", SwingConstants.CENTER);
+        invoiceLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        invoicePanel.add(invoiceLabel, BorderLayout.NORTH);
+        JButton invoiceButton = new JButton("Invoice");
+        setButtonSize(invoiceButton, 150, 50);
+        invoiceButton.setBackground(new Color(55, 55, 170));
+        invoiceButton.setForeground(Color.YELLOW);
+        invoicePanel.add(invoiceButton, BorderLayout.CENTER);
+        buttonPanel.add(invoicePanel);
+
+        // add ActionListener to invoice button
+        invoiceButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+            new invoiceMenu(); // open the customerMenu window
+                }
+        });
+    
+        // add exit button at bottom right corner
+        JButton logoutButton = new JButton("Logout");
+        logoutButton.setBackground(new Color(255, 0, 0));
+        logoutButton.setForeground(Color.WHITE);
+        setButtonSize(logoutButton, 100, 50);
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        bottomPanel.setBackground(new Color(55, 55, 150));
+        bottomPanel.add(logoutButton);
+
+         
+       // add ActionListener to logout button
+       logoutButton.addActionListener(new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+        int confirm = JOptionPane.showConfirmDialog(mainMenu.this, "Are you sure you want to logout?", "Confirm Logout", JOptionPane.YES_NO_OPTION);
+        if (confirm == JOptionPane.YES_OPTION) {
+            dispose(); // close the main menu window
+            new loginScreen(); // open a new instance of the login screen
+                 }
+            }
+        });
+
+        add(buttonPanel, BorderLayout.CENTER);
+        add(bottomPanel, BorderLayout.SOUTH);
+       
+        // pack and display the window
+        pack();
+        setVisible(true);
+
+        // set the size of the window
+        setSize(new Dimension(600, 300));
+    }
+
+    
+    
+    public void setButtonSize(JButton button, int width, int height) {
+        Dimension size = new Dimension(width, height);
+        button.setPreferredSize(size);
+        button.setMinimumSize(size);
+        button.setMaximumSize(size);
+    }
+
+
+
+    
+
+    public static void main(String[] args) {
+        new mainMenu();
+    
+    }
+
+}
